@@ -1,13 +1,135 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, IndianRupee, Pencil, Search, Trash2 } from "lucide-react";
+import { ChevronDown, IndianRupee, Pencil, Search, Trash2, X } from "lucide-react";
 import { Page } from "../../components/ui/Page.jsx";
 import { Button } from "../../components/ui/Button.jsx";
 import { Badge } from "../../components/ui/Badge.jsx";
 import { Input, Select } from "../../components/ui/Input.jsx";
 import { api } from "../../lib/api.js";
 import { cn, formatCurrency } from "../../lib/utils.js";
+
+function Modal({ title, children, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 px-4">
+      <motion.div initial={{ opacity: 0, y: 14, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="w-full max-w-2xl rounded-xl border border-border bg-white p-5">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close"><X size={16} /></Button>
+        </div>
+        {children}
+      </motion.div>
+    </div>
+  );
+}
+
+function AddTenantModal({ floors, onClose, onSubmit }) {
+  const firstFloor = floors[0];
+  const firstRoom = firstFloor?.rooms.find((room) => room.available > 0) || firstFloor?.rooms[0];
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    alternatePhone: "",
+    aadhar: "",
+    occupation: "",
+    address: "",
+    emergencyContact: "",
+    joiningDate: new Date().toISOString().slice(0, 10),
+    advanceAmount: "",
+    monthlyRent: "",
+    floor: firstFloor?.floorNumber || "",
+    room: firstRoom?.roomNumber || "",
+    bed: firstRoom?.beds.find((bed) => !bed.tenantId)?.label || ""
+  });
+  const selectedFloor = floors.find((floor) => String(floor.floorNumber) === String(form.floor));
+  const rooms = selectedFloor?.rooms || [];
+  const selectedRoom = rooms.find((room) => room.roomNumber === form.room);
+  const vacantBeds = selectedRoom?.beds.filter((bed) => !bed.tenantId) || [];
+
+  function update(field, value) {
+    setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function selectFloor(value) {
+    const floor = floors.find((item) => String(item.floorNumber) === String(value));
+    const room = floor?.rooms.find((item) => item.available > 0) || floor?.rooms[0];
+    setForm((current) => ({
+      ...current,
+      floor: value,
+      room: room?.roomNumber || "",
+      bed: room?.beds.find((bed) => !bed.tenantId)?.label || ""
+    }));
+  }
+
+  function selectRoom(value) {
+    const room = rooms.find((item) => item.roomNumber === value);
+    setForm((current) => ({
+      ...current,
+      room: value,
+      bed: room?.beds.find((bed) => !bed.tenantId)?.label || ""
+    }));
+  }
+
+  return (
+    <Modal title="Add Tenant" onClose={onClose}>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input placeholder="Name" value={form.name} onChange={(event) => update("name", event.target.value)} />
+        <Input placeholder="Phone" value={form.phone} onChange={(event) => update("phone", event.target.value)} />
+        <Input placeholder="Alternative Phone" value={form.alternatePhone} onChange={(event) => update("alternatePhone", event.target.value)} />
+        <Input placeholder="Aadhar Number" value={form.aadhar} onChange={(event) => update("aadhar", event.target.value)} />
+        <Input placeholder="Occupation" value={form.occupation} onChange={(event) => update("occupation", event.target.value)} />
+        <Input placeholder="Emergency Contact" value={form.emergencyContact} onChange={(event) => update("emergencyContact", event.target.value)} />
+        <Input placeholder="Address" value={form.address} onChange={(event) => update("address", event.target.value)} />
+        <Input type="date" value={form.joiningDate} onChange={(event) => update("joiningDate", event.target.value)} />
+        <Input placeholder="Advance Amount" type="number" value={form.advanceAmount} onChange={(event) => update("advanceAmount", event.target.value)} />
+        <Input placeholder="Monthly Rent" type="number" value={form.monthlyRent} onChange={(event) => update("monthlyRent", event.target.value)} />
+        <Select value={form.floor} onChange={(event) => selectFloor(event.target.value)}>
+          {floors.map((floor) => <option key={floor.id} value={floor.floorNumber}>Floor {floor.floorNumber}</option>)}
+        </Select>
+        <Select value={form.room} onChange={(event) => selectRoom(event.target.value)}>
+          {rooms.map((room) => <option key={room.id} value={room.roomNumber}>Room {room.roomNumber} · {room.available} vacant</option>)}
+        </Select>
+        <Select value={form.bed} onChange={(event) => update("bed", event.target.value)}>
+          {vacantBeds.length ? vacantBeds.map((bed) => <option key={bed.id}>{bed.label}</option>) : <option value="">No vacant beds</option>}
+        </Select>
+        <Input placeholder="Notes" value={form.notes || ""} onChange={(event) => update("notes", event.target.value)} />
+      </div>
+      <div className="mt-5 flex justify-end gap-2">
+        <Button variant="secondary" onClick={onClose}>Cancel</Button>
+        <Button disabled={!form.name || !form.phone || !form.room || !form.bed} onClick={() => onSubmit(form)}>Save Tenant</Button>
+      </div>
+    </Modal>
+  );
+}
+
+function MarkPaidModal({ tenant, onClose, onSubmit }) {
+  const [form, setForm] = useState({
+    amount: tenant?.monthlyRent || "",
+    method: "UPI",
+    remarks: ""
+  });
+
+  if (!tenant) return null;
+
+  return (
+    <Modal title={`Mark Paid · ${tenant.name}`} onClose={onClose}>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input type="number" placeholder="Amount Received" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} />
+        <Select value={form.method} onChange={(event) => setForm({ ...form, method: event.target.value })}>
+          <option>Cash</option>
+          <option>UPI</option>
+          <option>Bank</option>
+        </Select>
+        <Input className="sm:col-span-2" placeholder="Remarks" value={form.remarks} onChange={(event) => setForm({ ...form, remarks: event.target.value })} />
+      </div>
+      <div className="mt-5 flex justify-end gap-2">
+        <Button variant="secondary" onClick={onClose}>Cancel</Button>
+        <Button onClick={() => onSubmit(form)}>Save Payment</Button>
+      </div>
+    </Modal>
+  );
+}
 
 function TenantRow({ tenant, onPaid }) {
   const [open, setOpen] = useState(false);
@@ -81,18 +203,40 @@ function TenantRow({ tenant, onPaid }) {
 
 export default function TenantsPage() {
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data = [] } = useQuery({ queryKey: ["tenants"], queryFn: api.tenants });
-  const [query, setQuery] = useState("");
+  const { data: floors = [] } = useQuery({ queryKey: ["floors"], queryFn: api.floors });
+  const [query, setQuery] = useState(searchParams.get("q") || "");
   const [filter, setFilter] = useState("All");
-  const mutation = useMutation({
-    mutationFn: ({ id }) => api.markPaid(id, { amount: 6500, method: "UPI" }),
-    onSuccess: () => queryClient.invalidateQueries()
+  const [showAddTenant, setShowAddTenant] = useState(searchParams.get("action") === "add");
+  const [paymentTenant, setPaymentTenant] = useState(null);
+  const paymentMutation = useMutation({
+    mutationFn: ({ id, payment }) => api.markPaid(id, payment),
+    onSuccess: () => {
+      setPaymentTenant(null);
+      queryClient.invalidateQueries();
+    }
+  });
+  const tenantMutation = useMutation({
+    mutationFn: api.addTenant,
+    onSuccess: () => {
+      setShowAddTenant(false);
+      queryClient.invalidateQueries();
+    }
   });
   const tenants = useMemo(() => data.filter((tenant) => {
     const matchesQuery = [tenant.name, tenant.phone, tenant.room, tenant.aadhar, String(tenant.floor)].join(" ").toLowerCase().includes(query.toLowerCase());
     const matchesFilter = filter === "All" || tenant.paymentStatus === filter || tenant.sharingType === filter || tenant.status === filter;
     return matchesQuery && matchesFilter;
   }), [data, query, filter]);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "pay" && data.length && !paymentTenant) {
+      const unpaidTenant = data.find((tenant) => tenant.paymentStatus !== "Paid") || data[0];
+      setPaymentTenant(unpaidTenant);
+      setSearchParams({});
+    }
+  }, [data, paymentTenant, searchParams, setSearchParams]);
 
   return (
     <Page>
@@ -102,16 +246,22 @@ export default function TenantsPage() {
           <h1 className="mt-2 text-4xl font-semibold">Tenants</h1>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <div className="flex items-center gap-2 rounded-full border border-border px-3"><Search size={16} className="text-zinc-400" /><Input className="border-0 px-0" placeholder="Search name, phone, room..." value={query} onChange={(e) => setQuery(e.target.value)} /></div>
+          <div className="flex items-center gap-2 rounded-full border border-border px-3"><Search size={16} className="text-zinc-400" /><Input className="border-0 px-0" placeholder="Search name, phone, room..." value={query} onChange={(e) => {
+            setQuery(e.target.value);
+            setSearchParams(e.target.value ? { q: e.target.value } : {});
+          }} /></div>
           <Select className="sm:w-44" value={filter} onChange={(e) => setFilter(e.target.value)}>
             {["All", "Pending", "Paid", "Overdue", "Partial", "2 Sharing", "3 Sharing", "4 Sharing", "Active", "Left"].map((item) => <option key={item}>{item}</option>)}
           </Select>
-          <Button>Add Tenant</Button>
+          <Button onClick={() => setShowAddTenant(true)}>Add Tenant</Button>
         </div>
       </div>
       <div className="space-y-3">
-        {tenants.map((tenant) => <TenantRow key={tenant.id} tenant={tenant} onPaid={(t) => mutation.mutate({ id: t.id })} />)}
+        {tenants.map((tenant) => <TenantRow key={tenant.id} tenant={tenant} onPaid={(t) => setPaymentTenant(t)} />)}
+        {!tenants.length && <div className="rounded-xl border border-border p-8 text-center text-sm text-zinc-500">No tenants found. Add a tenant or adjust your search.</div>}
       </div>
+      {showAddTenant && <AddTenantModal floors={floors} onClose={() => setShowAddTenant(false)} onSubmit={(form) => tenantMutation.mutate(form)} />}
+      {paymentTenant && <MarkPaidModal tenant={paymentTenant} onClose={() => setPaymentTenant(null)} onSubmit={(payment) => paymentMutation.mutate({ id: paymentTenant.id, payment })} />}
     </Page>
   );
 }

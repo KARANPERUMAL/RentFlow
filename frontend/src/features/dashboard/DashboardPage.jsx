@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { ArrowUpRight, BedDouble, CalendarClock, IndianRupee, Users } from "lucide-react";
 import { Page } from "../../components/ui/Page.jsx";
 import { Card } from "../../components/ui/Card.jsx";
@@ -19,6 +20,7 @@ function Metric({ label, value, icon: Icon, accent }) {
 }
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const { data } = useQuery({ queryKey: ["dashboard"], queryFn: api.dashboard });
   if (!data) return <Page><div className="h-64 animate-pulse rounded-xl bg-zinc-100" /></Page>;
   const c = data.cards;
@@ -32,8 +34,8 @@ export default function DashboardPage() {
           <p className="mt-2 text-zinc-500">{data.user.pgName} · {todayLabel()}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary">Add tenant</Button>
-          <Button>Mark paid</Button>
+          <Button variant="secondary" onClick={() => navigate("/tenants?action=add")}>Add tenant</Button>
+          <Button onClick={() => navigate("/tenants?action=pay")}>Mark paid</Button>
         </div>
       </div>
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

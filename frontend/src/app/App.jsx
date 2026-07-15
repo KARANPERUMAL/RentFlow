@@ -23,7 +23,7 @@ export default function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/tenants" element={<TenantsPage />} />
           <Route path="/rooms" element={<RoomsPage />} />
-          <Route path="/floors" element={<RoomsPage view="floors" />} />
+          <Route path="/floors" element={<Navigate to="/rooms" replace />} />
           <Route path="/payments" element={<PaymentsPage />} />
           <Route path="/due-list" element={<PaymentsPage mode="due" />} />
           <Route path="/vacancies" element={<RoomsPage view="vacancies" />} />

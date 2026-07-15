@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Building2, CreditCard, DoorOpen, Home, Layers3, LogOut, Menu, Search, Settings, Users, FileBarChart, Bell } from "lucide-react";
+import { Building2, CreditCard, DoorOpen, Home, LogOut, Menu, Search, Settings, Users, FileBarChart, Bell } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../components/ui/Button.jsx";
 import { Input } from "../components/ui/Input.jsx";
@@ -9,7 +9,6 @@ const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: Home },
   { to: "/tenants", label: "Tenants", icon: Users },
   { to: "/rooms", label: "Rooms", icon: DoorOpen },
-  { to: "/floors", label: "Floors", icon: Layers3 },
   { to: "/payments", label: "Payments", icon: CreditCard },
   { to: "/due-list", label: "Due List", icon: Bell },
   { to: "/vacancies", label: "Vacancies", icon: Building2 },
@@ -19,7 +18,18 @@ const navItems = [
 
 export function AppShell() {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
+
+  function submitSearch(event) {
+    event.preventDefault();
+    const value = search.trim();
+    if (value) {
+      navigate(`/tenants?q=${encodeURIComponent(value)}`);
+    } else {
+      navigate("/tenants");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -35,10 +45,10 @@ export function AppShell() {
               <p className="mt-1 text-xs text-zinc-500">PG management suite</p>
             </div>
           </div>
-          <div className="ml-auto hidden w-full max-w-md items-center gap-2 rounded-full border border-border px-3 md:flex">
+          <form onSubmit={submitSearch} className="ml-auto hidden w-full max-w-md items-center gap-2 rounded-full border border-border px-3 md:flex">
             <Search size={16} className="text-zinc-400" />
-            <Input className="h-10 border-0 px-0 focus:border-0" placeholder="Search tenants, rooms, phone, Aadhaar..." />
-          </div>
+            <Input className="h-10 border-0 px-0 focus:border-0" placeholder="Search tenants, rooms, phone, Aadhaar..." value={search} onChange={(event) => setSearch(event.target.value)} />
+          </form>
           <Button
             variant="secondary"
             size="sm"
