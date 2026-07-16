@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build output
+dist/
+frontend/dist/
+target/
+backend/target/
+
+# Logs and local runtime files
+*.log
+*.tmp
+
+# Environment files
+.env
+.env.*
+
+# IDE/system files
+.idea/
+.vscode/
+.github/modernize/
+.DS_Store
+Thumbs.db
