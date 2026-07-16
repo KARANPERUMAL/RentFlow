@@ -1,14 +1,16 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Building2, CreditCard, DoorOpen, Home, LogOut, Menu, Search, Settings, Users, FileBarChart, Bell } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "../components/ui/Button.jsx";
 import { Input } from "../components/ui/Input.jsx";
-import { cn } from "../lib/utils.js";
+import { cn, dueBucket } from "../lib/utils.js";
+import { api } from "../lib/api.js";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: Home },
-  { to: "/tenants", label: "Tenants", icon: Users },
   { to: "/rooms", label: "Rooms", icon: DoorOpen },
+  { to: "/tenants", label: "Tenants", icon: Users },
   { to: "/payments", label: "Payments", icon: CreditCard },
   { to: "/due-list", label: "Due List", icon: Bell },
   { to: "/vacancies", label: "Vacancies", icon: Building2 },
@@ -20,6 +22,8 @@ export function AppShell() {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const { data: tenants = [] } = useQuery({ queryKey: ["tenants"], queryFn: api.tenants });
+  const todayDueCount = tenants.filter((tenant) => dueBucket(tenant) === "Today's Due").length;
 
   function submitSearch(event) {
     event.preventDefault();
@@ -39,7 +43,7 @@ export function AppShell() {
             <Menu size={18} />
           </button>
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-black bg-black text-sm font-semibold text-white">Rf</div>
+            <img src="/rentflow-logo.png" alt="RentFlow logo" className="h-11 w-11 rounded-full border border-border object-cover" />
             <div>
               <p className="text-sm font-semibold leading-none">RentFlow</p>
               <p className="mt-1 text-xs text-zinc-500">PG management suite</p>
@@ -76,7 +80,12 @@ export function AppShell() {
                 }
               >
                 <item.icon size={17} />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {item.to === "/due-list" && todayDueCount > 0 && (
+                  <span className="min-w-5 rounded-full bg-orange-brand px-1.5 py-0.5 text-center text-[11px] font-semibold text-white">
+                    {todayDueCount}
+                  </span>
+                )}
               </NavLink>
             ))}
           </nav>

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpRight, BedDouble, CalendarClock, IndianRupee, Users } from "lucide-react";
+import { ArrowUpRight, BedDouble, Bell, CalendarClock, Users } from "lucide-react";
 import { Page } from "../../components/ui/Page.jsx";
 import { Card } from "../../components/ui/Card.jsx";
 import { Button } from "../../components/ui/Button.jsx";
@@ -36,6 +36,7 @@ export default function DashboardPage() {
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={() => navigate("/tenants?action=add")}>Add tenant</Button>
           <Button onClick={() => navigate("/tenants?action=pay")}>Mark paid</Button>
+          <Button variant="secondary" onClick={() => navigate("/due-list")}><Bell size={16} /> Due List</Button>
         </div>
       </div>
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

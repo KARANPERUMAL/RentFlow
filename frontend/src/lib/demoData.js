@@ -60,8 +60,8 @@ export function createDemoData() {
           dueLabel: status === "Overdue" ? "Overdue" : id % 5 === 0 ? "Due Today" : id % 7 === 0 ? "Tomorrow" : "Upcoming",
           notes: id % 6 === 0 ? "Prefers UPI receipt on WhatsApp." : "No special notes.",
           paymentHistory: [
-            { month: "May 2026", amount: rent, status: "Paid On Time" },
-            { month: "June 2026", amount: status === "Partial" ? rent / 2 : rent, status }
+            { month: "May 2026", date: "20 May 2026", amount: rent, status: "Paid On Time" },
+            { month: "June 2026", date: "20 June 2026", amount: status === "Partial" ? rent / 2 : rent, status }
           ]
         };
       })
