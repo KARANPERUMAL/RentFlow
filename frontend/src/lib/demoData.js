@@ -1,6 +1,6 @@
 const firstNames = ["Rahul", "Karan", "Ajay", "Vikram", "Arjun", "Rohan", "Sahil", "Mohit", "Amit", "Nikhil", "Deepak", "Ritesh", "Manish", "Pranav", "Sameer", "Irfan", "Yash", "Harsh", "Sandeep", "Naveen"];
 const lastNames = ["Kumar", "Sharma", "Verma", "Patel", "Singh", "Gupta", "Mehta", "Reddy", "Nair", "Joshi"];
-const occupations = ["Software Engineer", "Student", "Designer", "Sales Executive", "Accountant", "Intern", "Bank Officer", "Teacher", "Analyst"];
+const occupationts = ["Software Engineer", "Student", "Designer", "Sales Executive", "Accountant", "Intern", "Bank Officer", "Teacher", "Analyst"];
 const statuses = ["Paid", "Pending", "Overdue", "Partial"];
 
 function rand(seed) {
